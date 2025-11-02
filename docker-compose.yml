@@ -1,0 +1,105 @@
+services:
+  grat-frontend:
+    build:
+      context: ./
+      dockerfile: ./client/Dockerfile
+    ports:
+      - "3000:80"
+  grat-postgres:
+    image: postgres:15
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=grat-pg
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=gratitude
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  grat-api-gateway:
+    build:
+      context: ./
+      dockerfile: ./services/api-gateway/Dockerfile
+    environment:
+      - PORT=50050
+    ports:
+      - "50050:50050"
+  grat-entries-service:
+    build:
+      context: ./
+      dockerfile: ./services/entries-service/Dockerfile
+    ports:
+      - "50051:50051"
+    environment:
+      - PGUSER=grat-pg
+      - PGHOST=grat-postgres
+      - PGDATABASE=gratitude
+      - PGPASSWORD=postgres
+      - PGPORT=5432
+      - PORT=50051
+    depends_on:
+      - grat-postgres
+  grat-moods-api:
+    build:
+      context: ./
+      dockerfile: ./services/moods-api/Dockerfile
+    environment:
+      - PORT=50052
+    ports:
+      - "50052:50052"
+  grat-stats-api:
+    build:
+      context: ./
+      dockerfile: ./services/stats-api/Dockerfile
+    environment:
+      - PORT=50053
+    ports:
+      - "50053:50053"
+  grat-stats-service:
+    build:
+      context: ./
+      dockerfile: ./services/stats-service/Dockerfile
+    ports:
+      - "50054:50054"
+    environment:
+      - PGUSER=grat-pg
+      - PGHOST=grat-postgres
+      - PGDATABASE=gratitude
+      - PGPASSWORD=postgres
+      - PGPORT=5432
+      - PORT=50054
+    depends_on:
+      - grat-postgres
+  grat-moods-service:
+    build:
+      context: ./
+      dockerfile: ./services/moods-service/Dockerfile
+    ports:
+      - "50055:50055"
+    environment:
+      - PORT=50055
+      - PGUSER=grat-pg
+      - PGHOST=grat-postgres
+      - PGDATABASE=gratitude
+      - PGPASSWORD=postgres
+      - PGPORT=5432
+    depends_on:
+      - grat-postgres
+  grat-server-main:
+    build:
+      context: ./
+      dockerfile: ./services/server-main/Dockerfile
+    ports:
+      - "50056:50056"
+    environment:
+      - PORT=50056
+      - PGUSER=grat-pg
+      - PGHOST=grat-postgres
+      - PGDATABASE=gratitude
+      - PGPASSWORD=postgres
+      - PGPORT=5432
+    depends_on:
+      - grat-postgres
+
+volumes:
+  postgres_data:
+    driver: local

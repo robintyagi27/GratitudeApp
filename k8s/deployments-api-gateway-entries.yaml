@@ -1,0 +1,118 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grat-api-gateway
+  namespace: gratitude-app
+  labels:
+    app: grat-api-gateway
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: grat-api-gateway
+  template:
+    metadata:
+      labels:
+        app: grat-api-gateway
+    spec:
+      containers:
+      - name: api-gateway
+        image: pranshub11gratitudeapp.azurecr.io/grat-api-gateway:latest
+        ports:
+        - containerPort: 50050
+        env:
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: gratitude-config
+              key: API_GATEWAY_PORT
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 50050
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 50050
+          initialDelaySeconds: 5
+          periodSeconds: 5
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grat-entries-service
+  namespace: gratitude-app
+  labels:
+    app: grat-entries-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: grat-entries-service
+  template:
+    metadata:
+      labels:
+        app: grat-entries-service
+    spec:
+      containers:
+      - name: entries-service
+        image: pranshub11gratitudeapp.azurecr.io/grat-entries-service:latest
+        ports:
+        - containerPort: 50051
+        env:
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: gratitude-config
+              key: ENTRIES_SERVICE_PORT
+        - name: PGUSER
+          valueFrom:
+            configMapKeyRef:
+              name: gratitude-config
+              key: PGUSER
+        - name: PGHOST
+          valueFrom:
+            configMapKeyRef:
+              name: gratitude-config
+              key: PGHOST
+        - name: PGDATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: gratitude-config
+              key: PGDATABASE
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: gratitude-secrets
+              key: PGPASSWORD
+        - name: PGPORT
+          valueFrom:
+            configMapKeyRef:
+              name: gratitude-config
+              key: PGPORT
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          grpc:
+            port: 50051
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          grpc:
+            port: 50051
+          initialDelaySeconds: 5
+          periodSeconds: 5

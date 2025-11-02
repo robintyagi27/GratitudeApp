@@ -1,0 +1,26 @@
+# GratitudeApp Kubernetes Deployment Order
+# Apply these files in the following order for successful deployment
+
+# 1. Namespace and Configuration
+kubectl apply -f namespace.yaml
+kubectl apply -f configmap.yaml
+kubectl apply -f secrets.yaml
+
+# 2. Database
+kubectl apply -f postgres.yaml
+
+# 3. Services
+kubectl apply -f services.yaml
+
+# 4. Applications (can be applied in parallel)
+kubectl apply -f deployments-api-gateway-entries.yaml
+kubectl apply -f deployments-moods-stats-api.yaml
+kubectl apply -f deployments-stats-moods-service.yaml
+kubectl apply -f deployments-server-main-frontend.yaml
+
+# 5. Ingress (after all services are running)
+kubectl apply -f ingress.yaml
+
+# 6. Check status
+kubectl get all -n gratitude-app
+kubectl get ingress -n gratitude-app

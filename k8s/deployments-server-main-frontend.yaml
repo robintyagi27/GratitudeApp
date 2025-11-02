@@ -1,0 +1,114 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grat-server-main
+  namespace: gratitude-app
+  labels:
+    app: grat-server-main
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: grat-server-main
+  template:
+    metadata:
+      labels:
+        app: grat-server-main
+    spec:
+      containers:
+      - name: server-main
+        image: pranshub11gratitudeapp.azurecr.io/grat-server-main:latest
+        ports:
+        - containerPort: 50056
+        env:
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: gratitude-config
+              key: SERVER_MAIN_PORT
+        - name: PGUSER
+          valueFrom:
+            configMapKeyRef:
+              name: gratitude-config
+              key: PGUSER
+        - name: PGHOST
+          valueFrom:
+            configMapKeyRef:
+              name: gratitude-config
+              key: PGHOST
+        - name: PGDATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: gratitude-config
+              key: PGDATABASE
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: gratitude-secrets
+              key: PGPASSWORD
+        - name: PGPORT
+          valueFrom:
+            configMapKeyRef:
+              name: gratitude-config
+              key: PGPORT
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 50056
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 50056
+          initialDelaySeconds: 5
+          periodSeconds: 5
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grat-frontend
+  namespace: gratitude-app
+  labels:
+    app: grat-frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: grat-frontend
+  template:
+    metadata:
+      labels:
+        app: grat-frontend
+    spec:
+      containers:
+      - name: frontend
+        image: pranshub11gratitudeapp.azurecr.io/grat-frontend:latest
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5

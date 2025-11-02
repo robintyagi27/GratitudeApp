@@ -1,0 +1,80 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: gratitude-app
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: managed-csi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grat-postgres
+  namespace: gratitude-app
+  labels:
+    app: grat-postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grat-postgres
+  template:
+    metadata:
+      labels:
+        app: grat-postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          valueFrom:
+            configMapKeyRef:
+              name: gratitude-config
+              key: PGDATABASE
+        - name: POSTGRES_USER
+          valueFrom:
+            configMapKeyRef:
+              name: gratitude-config
+              key: PGUSER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: gratitude-secrets
+              key: PGPASSWORD
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+      volumes:
+      - name: postgres-storage
+        persistentVolumeClaim:
+          claimName: postgres-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grat-postgres-service
+  namespace: gratitude-app
+  labels:
+    app: grat-postgres
+spec:
+  ports:
+  - port: 5432
+    targetPort: 5432
+    protocol: TCP
+  selector:
+    app: grat-postgres

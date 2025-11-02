@@ -1,0 +1,141 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grat-stats-service
+  namespace: gratitude-app
+  labels:
+    app: grat-stats-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: grat-stats-service
+  template:
+    metadata:
+      labels:
+        app: grat-stats-service
+    spec:
+      containers:
+      - name: stats-service
+        image: pranshub11gratitudeapp.azurecr.io/grat-stats-service:latest
+        ports:
+        - containerPort: 50054
+        env:
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: gratitude-config
+              key: STATS_SERVICE_PORT
+        - name: PGUSER
+          valueFrom:
+            configMapKeyRef:
+              name: gratitude-config
+              key: PGUSER
+        - name: PGHOST
+          valueFrom:
+            configMapKeyRef:
+              name: gratitude-config
+              key: PGHOST
+        - name: PGDATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: gratitude-config
+              key: PGDATABASE
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: gratitude-secrets
+              key: PGPASSWORD
+        - name: PGPORT
+          valueFrom:
+            configMapKeyRef:
+              name: gratitude-config
+              key: PGPORT
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          grpc:
+            port: 50054
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          grpc:
+            port: 50054
+          initialDelaySeconds: 5
+          periodSeconds: 5
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grat-moods-service
+  namespace: gratitude-app
+  labels:
+    app: grat-moods-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: grat-moods-service
+  template:
+    metadata:
+      labels:
+        app: grat-moods-service
+    spec:
+      containers:
+      - name: moods-service
+        image: pranshub11gratitudeapp.azurecr.io/grat-moods-service:latest
+        ports:
+        - containerPort: 50055
+        env:
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: gratitude-config
+              key: MOODS_SERVICE_PORT
+        - name: PGUSER
+          valueFrom:
+            configMapKeyRef:
+              name: gratitude-config
+              key: PGUSER
+        - name: PGHOST
+          valueFrom:
+            configMapKeyRef:
+              name: gratitude-config
+              key: PGHOST
+        - name: PGDATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: gratitude-config
+              key: PGDATABASE
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: gratitude-secrets
+              key: PGPASSWORD
+        - name: PGPORT
+          valueFrom:
+            configMapKeyRef:
+              name: gratitude-config
+              key: PGPORT
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          grpc:
+            port: 50055
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          grpc:
+            port: 50055
+          initialDelaySeconds: 5
+          periodSeconds: 5
